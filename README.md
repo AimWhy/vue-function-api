@@ -10,12 +10,10 @@ Future-Oriented Programming, `vue-function-api` provides function api from `Vue3
 
 # Navigation
 
-- [Changelog](https://github.com/vuejs/vue-function-api/blob/master/CHANGELOG.md)
+- [Changelog](https://github.com/aimwhy/vue-function-api/blob/master/CHANGELOG.md)
 - [Installation](#Installation)
 - [Usage](#Usage)
 - [Example](#Example)
-  - [Todo App Compare with Vue2 API](https://codesandbox.io/s/todo-example-6d7ep)
-  - [CodePen Live Demo](https://codepen.io/liximomo/pen/dBOvgg)
   - [Single-File Component](#single-file-Component)
 - [API](#API)
   -  [setup](#setup)
@@ -42,7 +40,7 @@ yarn add vue-function-api
 **CDN**
 
 ```html
-<script src="https://unpkg.com/vue-function-api/dist/vue-function-api.umd.js"></script>
+<script src="https://unpkg.com/..."></script>
 ```
 By using the global variable `window.vueFunctionApi`
 
@@ -61,10 +59,6 @@ Vue.use(plugin)
 After installing the plugin you can use the new [function API](#API) to compose your component.
 
 # Example
-
-## [Todo App Compare with Vue2 API](https://codesandbox.io/s/todo-example-6d7ep)
-
-## [CodePen Live Demo](https://codepen.io/liximomo/pen/dBOvgg)
 
 ## Single-File Component
 ``` html
@@ -210,7 +204,7 @@ The `watch` API provides a way to perform side effect based on reactive state ch
 
 **Returns** a `Function` to stop the `watch`.
 
-> [effect-cleanup](https://github.com/vuejs/rfcs/blob/function-apis/active-rfcs/0000-function-api.md#effect-cleanup) is NOT supported currently.
+> [effect-cleanup](https://github.com/vuejs/rfcs/blob/function-apis/active-rfcs/0000-function-api.md#effect-cleanup) .
 
 ### WatchOption
 | Name | Type | Default | Description |

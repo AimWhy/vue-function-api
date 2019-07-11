@@ -14,8 +14,6 @@
 - [安装](#安装)
 - [使用](#使用)
 - [示例](#示例)
-  - [Todo App Compare with Vue2 API](https://codesandbox.io/s/todo-example-6d7ep)
-  - [CodePen Live Demo](https://codepen.io/liximomo/pen/dBOvgg)
   - [Single-File Component](#single-file-Component)
 - [API](#API)
     -  [setup](#setup)
@@ -42,13 +40,10 @@ yarn add vue-function-api
 **CDN**
 
 ```html
-<script src="https://unpkg.com/vue-function-api/dist/vue-function-api.umd.js"></script>
+<script src="https://unpkg.com/..."></script>
 ```
 通过全局变量 `window.vueFunctionApi` 来使用。
 
-**CodePen**
-
-[在线示例](https://codepen.io/liximomo/pen/dBOvgg)，fork 后进行测试或 bug 反馈。
 
 # 使用
 您必须显式地通过 `Vue.use()` 来安装 `vue-function-api`:
@@ -63,10 +58,6 @@ Vue.use(plugin)
 安装插件后，您就可以使用新的[函数式 API](#API)来书写组件了。
 
 # 示例
-
-## [Todo App Compare with Vue2 API](https://codesandbox.io/s/todo-example-6d7ep)
-
-## [CodePen Live Demo](https://codepen.io/liximomo/pen/dBOvgg)
 
 ## Single-File Component
 ``` html
@@ -213,7 +204,7 @@ console.log(countPlusOne.value) // 2
 **返回值** `Function`
 一个可调用的函数来停止 `watch`。
 
-> [effect-cleanup](https://github.com/vuejs/rfcs/blob/function-apis/active-rfcs/0000-function-api.md#effect-cleanup) 当前并不支持。
+> [effect-cleanup](https://github.com/vuejs/rfcs/blob/function-apis/active-rfcs/0000-function-api.md#effect-cleanup) 。
 
 ### WatchOption
 | Name | Type | Default | Description |
