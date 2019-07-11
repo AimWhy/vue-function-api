@@ -1,6 +1,6 @@
 /*!
  * 
- *   vue-function-api v0.0.1
+ *   @aimwhy/vue-function-api v0.0.1
  *   https://github.com/aimwhy/vue-function-api
  * 
  *   Copyright (c) https://github.com/aimwhy

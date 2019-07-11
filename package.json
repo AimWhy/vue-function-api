@@ -1,5 +1,5 @@
 {
-  "name": "vue-function-api",
+  "name": "@aimwhy/vue-function-api",
   "version": "0.0.1",
   "description": "",
   "main": "dist/index.js",
