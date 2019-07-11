@@ -15,6 +15,7 @@ Future-Oriented Programming, `vue-function-api` provides function api from `Vue3
 - [Usage](#Usage)
 - [Example](#Example)
   - [Single-File Component](#single-file-Component)
+  - [Demo](https://codesandbox.io/s/vue-template-szw4b)
 - [API](#API)
   -  [setup](#setup)
   -  [value](#value)
