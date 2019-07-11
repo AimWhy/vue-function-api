@@ -40,7 +40,7 @@ yarn add vue-function-api
 **CDN**
 
 ```html
-<script src="https://unpkg.com/..."></script>
+<script src="https://unpkg.com/@aimwhy/vue-function-api@0.0.1/dist/index.js"></script>
 ```
 通过全局变量 `window.vueFunctionApi` 来使用。
 
