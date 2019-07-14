@@ -1,109 +1,116 @@
-"use strict";
+var noopFn = _ => _
 
-var noopFn = _ => _;
+var toString = x => Object.prototype.toString.call(x)
 
-var toString = x => Object.prototype.toString.call(x);
+var isArray = x => toString(x) === `[object Array]`
 
-var isArray = x => toString(x) === "[object Array]";
+var isPlainObject = x => toString(x) === `[object Object]`
 
-var isPlainObject = x => toString(x) === "[object Object]";
-
-var hasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
+var hasOwn = (obj, key) => obj && Object.prototype.hasOwnProperty.call(obj, key)
 
 function assert(condition, msg) {
   if (!condition) {
-    throw new Error("[vue-function-api] " + msg);
+    throw new Error(`[vue-function-api] ${msg}`)
   }
 }
 
-function proxy(target, key, getter, setter) {
-  Object.defineProperty(target, key, {
-    enumerable: true,
-    configurable: true,
-    get: getter,
-    set: setter || noopFn
-  });
-}
-
-function proxy2(target, source, targetKey, sourceKey = targetKey) {
+function proxy(target, source, targetKey, sourceKey = targetKey) {
   Object.defineProperty(target, targetKey, {
     enumerable: true,
     configurable: false,
     get: function proxyGetter() {
-      return source[sourceKey];
+      return source[sourceKey]
     },
     set: function proxySetter(val) {
-      source[sourceKey] = val;
-    }
-  });
+      source[sourceKey] = val
+    },
+  })
 }
 
-var currentVue = null;
+var currentVue = null
 function getCurrentVue() {
-  assert(currentVue, "must call Vue.use(plugin) before using any function.");
-  return currentVue;
+  assert(currentVue, `must call Vue.use(plugin) before using any function.`)
+  return currentVue
 }
 function setCurrentVue(vue) {
-  currentVue = vue;
+  currentVue = vue
 }
 function vueWarn(msg, vm) {
-  getCurrentVue().util.warn(msg, vm);
+  getCurrentVue().util.warn(msg, vm)
 }
 
-var currentVM = null;
+var currentVM = null
 function getCurrentVM() {
-  return currentVM;
+  return currentVM
 }
 function setCurrentVM(vm) {
-  currentVM = vm;
+  currentVM = vm
 }
 function ensureCurrentVMInFn(hook) {
-  var vm = getCurrentVM();
-  assert(vm, '"' + hook + '" get called outside of "setup()"');
-  return vm;
+  var vm = getCurrentVM()
+  assert(vm, `"${hook}" get called outside of "setup()"`)
+  return vm
 }
 
 // createComponent
 
 export function createComponent(compOptions) {
-  return compOptions;
+  return typeof compOptions === `function`
+    ? { setup: compOptions }
+    : compOptions
 }
 
-// to state and value
+// For state / value / state
+
+function ValueWrapper(v) {
+  this.observe = v
+}
+
+Object.defineProperty(ValueWrapper.prototype, `value`, {
+  get() {
+    return this.observe.$$value
+  },
+  set(v) {
+    this.observe.$$value = v
+  },
+  enumerable: true,
+  configurable: true,
+})
+
+function isValueWrapper(obj) {
+  return obj instanceof ValueWrapper
+}
 
 function unProxy(obj) {
   if (obj) {
-    var keys = Object.keys(obj);
+    var keys = Object.keys(obj)
     for (var index = 0; index < keys.length; index++) {
-      var key = keys[index];
-      var value_1 = obj[key];
+      var key = keys[index]
+      var value_1 = obj[key]
       if (isValueWrapper(value_1)) {
-        proxy2(obj, value_1.observe, key, "$$value");
-      } else if (isComputedWrapper(value_1)) {
-        proxy2(obj, value_1.observe, key, "$$compute");
+        proxy(obj, value_1.observe, key, `$$value`)
       } else if (
-        value_1 &&
-        !hasOwn(value_1, "__ob__") &&
+        !hasOwn(value_1, `__ob__`) &&
         (isPlainObject(value_1) || isArray(value_1))
       ) {
-        obj[key] = unProxy(value_1);
+        obj[key] = unProxy(value_1)
       }
     }
   }
-  return obj;
+  return obj
 }
 
 function observable(obj) {
-  var Vue = getCurrentVue();
+  var Vue = getCurrentVue()
   if (Vue.observable) {
-    return Vue.observable(obj);
+    return Vue.observable(obj)
   }
 
-  var silent = Vue.config.silent;
-  Vue.config.silent = true;
-  var vm = new Vue({ data: { $$state: obj } });
-  Vue.config.silent = silent;
-  return vm._data.$$state;
+  var silent = Vue.config.silent
+  Vue.config.silent = true
+  var vm = new Vue({ data: { $$state: obj } })
+  Vue.config.silent = silent
+  return vm._data.$$state
 }
 
 // state
@@ -111,239 +118,175 @@ function observable(obj) {
 export function state(value) {
   return observable(
     isArray(value) || isPlainObject(value) ? unProxy(value) : value
-  );
+  )
 }
 
 // value
 
-function ValueWrapper(v) {
-  this.observe = observable({ $$value: v });
-}
-
-Object.defineProperty(ValueWrapper.prototype, "value", {
-  get() {
-    return this.observe.$$value;
-  },
-  set(v) {
-    this.observe.$$value = v;
-  },
-  enumerable: true,
-  configurable: true
-});
-
-function isValueWrapper(obj) {
-  return obj instanceof ValueWrapper;
-}
-
 export function value(value) {
   return new ValueWrapper(
-    isArray(value) || isPlainObject(value) ? unProxy(value) : value
-  );
+    observable({
+      $$value: isArray(value) || isPlainObject(value) ? unProxy(value) : value,
+    })
+  )
 }
 
 // computed
 
-function ComputedWrapper(v, _internal) {
-  this.observe = v;
-  this._internal = _internal;
-}
-
-Object.defineProperty(ComputedWrapper.prototype, "value", {
-  get: function() {
-    return this._internal.read();
-  },
-  set: function(val) {
-    if (!this._internal.write) {
-      vueWarn(
-        "Computed property" +
-          (this._propName ? ' "' + this._propName + '" ' : "") +
-          "was assigned to but it has no setter.",
-        this._vm
-      );
-    } else {
-      this._internal.write(val);
-    }
-  },
-  enumerable: true,
-  configurable: true
-});
-
 function compoundComputed(computed) {
-  var Vue = getCurrentVue();
-  var silent = Vue.config.silent;
-  Vue.config.silent = true;
-  var reactive = new Vue({ computed: computed });
-  Vue.config.silent = silent;
-  return reactive;
+  var Vue = getCurrentVue()
+  var silent = Vue.config.silent
+  Vue.config.silent = true
+  var reactive = new Vue({ computed: computed })
+  Vue.config.silent = silent
+  return reactive
 }
 
 export function computed(getter, setter) {
   var computedHost = compoundComputed({
-    $$compute: { get: getter, set: setter }
-  });
-
-  return new ComputedWrapper(
-    computedHost,
-    Object.assign(
-      {
-        read: function() {
-          return computedHost.$$compute;
-        }
-      },
-      setter && {
-        write: function(v) {
-          computedHost.$$compute = v;
-        }
-      }
-    )
-  );
-}
-
-function isComputedWrapper(obj) {
-  return obj instanceof ComputedWrapper;
+    $$value: { get: getter, set: setter },
+  })
+  return new ComputedWrapper(computedHost)
 }
 
 // lifeCycle
 
 var genName = function(name) {
-  return "on" + name[0].toUpperCase() + name.slice(1);
-};
+  return `on${name[0].toUpperCase()}${name.slice(1)}`
+}
 
 function createLifeCycle(lifeCycleHook) {
   return function(callback) {
-    var vm = ensureCurrentVMInFn(genName(lifeCycleHook));
-    vm.$on("hook:" + lifeCycleHook, callback);
-  };
+    var vm = ensureCurrentVMInFn(genName(lifeCycleHook))
+    vm.$on(`hook:${lifeCycleHook}`, callback)
+  }
 }
 
 function createLifeCycles(lifeCycleHooks, name) {
   return function(callback) {
-    var vm = ensureCurrentVMInFn(genName(name));
+    var vm = ensureCurrentVMInFn(genName(name))
     lifeCycleHooks.forEach(function(lifeCycleHook) {
-      return vm.$on("hook:" + lifeCycleHook, callback);
-    });
-  };
+      return vm.$on(`hook:${lifeCycleHook}`, callback)
+    })
+  }
 }
-export const onCreated = createLifeCycle("created");
-export const onBeforeMount = createLifeCycle("beforeMount");
-export const onMounted = createLifeCycle("mounted");
-export const onBeforeUpdate = createLifeCycle("beforeUpdate");
-export const onUpdated = createLifeCycle("updated");
-export const onActivated = createLifeCycle("activated");
-export const onDeactivated = createLifeCycle("deactivated");
-export const onBeforeDestroy = createLifeCycle("beforeDestroy");
-export const onDestroyed = createLifeCycle("destroyed");
-export const onErrorCaptured = createLifeCycle("errorCaptured");
+
+export const onCreated = createLifeCycle(`created`)
+export const onBeforeMount = createLifeCycle(`beforeMount`)
+export const onMounted = createLifeCycle(`mounted`)
+export const onBeforeUpdate = createLifeCycle(`beforeUpdate`)
+export const onUpdated = createLifeCycle(`updated`)
+export const onActivated = createLifeCycle(`activated`)
+export const onDeactivated = createLifeCycle(`deactivated`)
+export const onBeforeDestroy = createLifeCycle(`beforeDestroy`)
+export const onDestroyed = createLifeCycle(`destroyed`)
+export const onErrorCaptured = createLifeCycle(`errorCaptured`)
 export const onUnmounted = createLifeCycles(
-  ["destroyed", "deactivated"],
-  "unmounted"
-);
+  [`destroyed`, `deactivated`],
+  `unmounted`
+)
 
 // watch
 
-var WatcherPreFlushQueueKey = "vfa.key.preFlushQueue";
-var WatcherPostFlushQueueKey = "vfa.key.postFlushQueue";
-var initValue = {};
-var fallbackVM;
+var WatcherPreFlushQueueKey = `vfa.key.preFlushQueue`
+var WatcherPostFlushQueueKey = `vfa.key.postFlushQueue`
+var fallbackVM
 
 function hasWatchEnv(vm) {
-  return vm[WatcherPreFlushQueueKey] !== undefined;
+  return vm[WatcherPreFlushQueueKey] !== undefined
 }
 
 function installWatchEnv(vm) {
-  vm[WatcherPreFlushQueueKey] = [];
-  vm[WatcherPostFlushQueueKey] = [];
-  vm.$on("hook:beforeUpdate", createFlusher(WatcherPreFlushQueueKey));
-  vm.$on("hook:updated", createFlusher(WatcherPostFlushQueueKey));
+  vm[WatcherPreFlushQueueKey] = []
+  vm[WatcherPostFlushQueueKey] = []
+  vm.$on(`hook:beforeUpdate`, createFlusher(WatcherPreFlushQueueKey))
+  vm.$on(`hook:updated`, createFlusher(WatcherPostFlushQueueKey))
 }
 
 function createFlusher(key) {
   return function() {
-    flushQueue(this, key);
-  };
+    flushQueue(this, key)
+  }
 }
 
 function flushQueue(vm, key) {
-  var queue = vm[key];
+  var queue = vm[key]
   for (var index = 0; index < queue.length; index++) {
-    queue[index]();
+    queue[index]()
   }
-  queue.length = 0;
+  queue.length = 0
 }
 
 function flushWatcherCallback(vm, fn, mode) {
   function fallbackFlush() {
     vm.$nextTick(function() {
       if (vm[WatcherPreFlushQueueKey].length) {
-        flushQueue(vm, WatcherPreFlushQueueKey);
+        flushQueue(vm, WatcherPreFlushQueueKey)
       }
       if (vm[WatcherPostFlushQueueKey].length) {
-        flushQueue(vm, WatcherPostFlushQueueKey);
+        flushQueue(vm, WatcherPostFlushQueueKey)
       }
-    });
+    })
   }
   switch (mode) {
-    case "pre":
-      fallbackFlush();
-      return vm[WatcherPreFlushQueueKey].push(fn);
-    case "post":
-      fallbackFlush();
-      return vm[WatcherPostFlushQueueKey].push(fn);
-    case "sync":
-      return fn();
+    case `pre`:
+      fallbackFlush()
+      return vm[WatcherPreFlushQueueKey].push(fn)
+    case `post`:
+      fallbackFlush()
+      return vm[WatcherPostFlushQueueKey].push(fn)
+    case `sync`:
+      return fn()
     default:
       return assert(
         false,
-        'flush must be one of ["post", "pre", "sync"], but got ' + mode
-      );
+        `flush must be one of ["post", "pre", "sync"], but got ${mode}`
+      )
   }
 }
 
 function createSingleSourceWatcher(vm, source, cb, options) {
-  var getter =
-    isValueWrapper(source) || isComputedWrapper(source)
-      ? _ => source.value
-      : source;
-  let cleanUp = noopFn;
+  var getter = isValueWrapper(source) ? _ => source.observe.$$value : source
+  let cleanUp = noopFn
   let cbWrap = function(n, o) {
-    cleanUp();
+    cleanUp()
     cb(n, o, function(v) {
-      cleanUp = v;
-    });
-  };
+      cleanUp = v
+    })
+  }
 
   var callbackRef = function(n, o) {
-    callbackRef = flush;
-    return !options.lazy ? cbWrap(n, o) : flush(n, o);
-  };
+    callbackRef = flush
+    return !options.lazy ? cbWrap(n, o) : flush(n, o)
+  }
 
   var flush = function(n, o) {
-    flushWatcherCallback(vm, _ => cbWrap(n, o), options.flush);
-  };
+    flushWatcherCallback(vm, _ => cbWrap(n, o), options.flush)
+  }
 
   var unwatch = vm.$watch(getter, callbackRef, {
     immediate: !options.lazy,
     deep: options.deep,
-    sync: options.flush === "sync"
-  });
+    sync: options.flush === `sync`,
+  })
 
   return function stop() {
-    cleanUp();
-    unwatch();
-  };
+    cleanUp()
+    unwatch()
+  }
 }
 
 function createMultiSourceWatcher(vm, sources, cb, options) {
-  var pre = Array(sources.length);
-  var cur = Array(sources.length);
+  var pre = Array(sources.length)
+  var cur = Array(sources.length)
 
-  let cleanUp = noopFn;
+  let cleanUp = noopFn
   let cbWrap = function(n, o) {
-    cleanUp();
+    cleanUp()
     cb(n, o, function(v) {
-      cleanUp = v;
-    });
-  };
+      cleanUp = v
+    })
+  }
 
   var unwatchArr = sources.map(function(source, i) {
     return (function(_source, _i) {
@@ -351,57 +294,54 @@ function createMultiSourceWatcher(vm, sources, cb, options) {
         vm,
         _source,
         function(n, v) {
-          pre[_i] = v;
-          cur[_i] = n;
-          cbWrap(cur, pre);
+          pre[_i] = v
+          cur[_i] = n
+          cbWrap(cur, pre)
         },
         options
-      );
-    })(source, i);
-  });
+      )
+    })(source, i)
+  })
 
   return function stop() {
-    cleanUp();
-    unwatchArr.forEach(v => v());
-  };
+    cleanUp()
+    unwatchArr.forEach(v => v())
+  }
 }
 
 export function watch(source, cb, options = {}) {
-  var opts = Object.assign(
-    { lazy: false, deep: false, flush: "post" },
-    options
-  );
-  var vm = getCurrentVM();
+  var opts = Object.assign({ lazy: false, deep: false, flush: `post` }, options)
+  var vm = getCurrentVM()
   if (!vm) {
     if (!fallbackVM) {
-      var Vue_1 = getCurrentVue();
-      var silent = Vue_1.config.silent;
-      Vue_1.config.silent = true;
-      fallbackVM = new Vue_1();
-      Vue_1.config.silent = silent;
+      var Vue_1 = getCurrentVue()
+      var silent = Vue_1.config.silent
+      Vue_1.config.silent = true
+      fallbackVM = new Vue_1()
+      Vue_1.config.silent = silent
     }
-    vm = fallbackVM;
-    opts.flush = "sync";
+    vm = fallbackVM
+    opts.flush = `sync`
   }
 
   if (!hasWatchEnv(vm)) {
-    installWatchEnv(vm);
+    installWatchEnv(vm)
   }
 
   return (isArray(source)
     ? createMultiSourceWatcher
-    : createSingleSourceWatcher)(vm, source, cb, opts);
+    : createSingleSourceWatcher)(vm, source, cb, opts)
 }
 
 // provide
 
 export function provide(provideOption) {
   if (provideOption) {
-    var vm = ensureCurrentVMInFn("provide");
+    var vm = ensureCurrentVMInFn(`provide`)
     vm._provided =
-      typeof provideOption === "function"
+      typeof provideOption === `function`
         ? provideOption.call(vm)
-        : provideOption;
+        : provideOption
   }
 }
 
@@ -409,15 +349,15 @@ export function provide(provideOption) {
 
 export function inject(injectKey) {
   if (injectKey) {
-    var vm = ensureCurrentVMInFn("inject");
-    var source = vm;
+    var vm = ensureCurrentVMInFn(`inject`)
+    var source = vm
     while (source) {
       if (source._provided && hasOwn(source._provided, injectKey)) {
-        return source._provided[injectKey];
+        return source._provided[injectKey]
       }
-      source = source.$parent;
+      source = source.$parent
     }
-    vueWarn('Injection "' + injectKey + '" not found', vm);
+    vueWarn(`Injection "${injectKey}" not found`, vm)
   }
 }
 
@@ -427,143 +367,143 @@ function _install(Vue, mixin) {
   if (currentVue && currentVue === Vue) {
     assert(
       false,
-      "already installed. Vue.use(plugin) should be called only once"
-    );
-    return;
+      `already installed. Vue.use(plugin) should be called only once`
+    )
+    return
   }
 
-  Vue.config.optionMergeStrategies.setup =
-    Vue.config.optionMergeStrategies.data;
-  setCurrentVue(Vue);
-  mixin(Vue);
+  Vue.config.optionMergeStrategies.setup = Vue.config.optionMergeStrategies.data
+  setCurrentVue(Vue)
+  mixin(Vue)
 }
 
 function checkData(vm, propName) {
-  var props = vm.$options.props;
-  var methods = vm.$options.methods;
-  var computed = vm.$options.computed;
-  var msgPrefix =
-    'The setup binding property "' + propName + '" is already declared';
-  var msgSuffix = ".";
+  var props = vm.$options.props
+  var methods = vm.$options.methods
+  var computed = vm.$options.computed
+  var msgPrefix = `The setup binding property "${propName}" is already declared`
+  var msgSuffix = `.`
 
   if (hasOwn(vm.$data, propName)) {
-    msgSuffix = "as a data.";
+    msgSuffix = `as a data.`
   } else if (props && hasOwn(props, propName)) {
-    msgSuffix = "as a prop.";
+    msgSuffix = `as a prop.`
   } else if (methods && hasOwn(methods, propName)) {
-    msgSuffix = "as a method.";
+    msgSuffix = `as a method.`
   } else if (computed && propName in computed) {
-    msgSuffix = "as a computed.";
+    msgSuffix = `as a computed.`
   }
-  if (msgSuffix !== ".") {
-    vueWarn(msgPrefix + msgSuffix, vm);
+  if (msgSuffix !== `.`) {
+    vueWarn(msgPrefix + msgSuffix, vm)
   }
 }
 
 function mixin(Vue) {
   Vue.mixin({
-    created: setupMix
-  });
+    created: setupMix,
+  })
 
   function setupMix() {
-    var vm = this;
-    var setup = vm.$options.setup;
+    var vm = this
+    var setup = vm.$options.setup
 
     if (!setup) {
-      return;
+      return
     }
 
-    if (typeof setup !== "function") {
+    if (typeof setup !== `function`) {
       return vueWarn(
-        'The "setup" option should be a function that returns a object in component definitions.',
+        `The "setup" option should be a function that returns a object in component definitions.`,
         vm
-      );
+      )
     }
 
-    var binding;
-    var ctx = createContext(vm);
+    var binding
+    var ctx = createContext(vm)
 
-    setCurrentVM(vm);
+    setCurrentVM(vm)
     try {
-      binding = setup(vm.$props || {}, ctx);
+      binding = setup(vm.$props || {}, ctx)
     } catch (err) {
-      vueWarn('there is an error occuring in "setup"', vm);
-      console.log(err);
+      vueWarn(`there is an error occuring in "setup"`, vm)
+      console.log(err)
     } finally {
-      setCurrentVM(null);
+      setCurrentVM(null)
     }
 
     if (!binding) {
-      return;
+      return
     }
 
     if (!isPlainObject(binding)) {
-      if (typeof binding === "function") {
+      if (typeof binding === `function`) {
         vm.$options.render = function(h) {
-          return binding(ctx.props, ctx.slots, ctx.attrs);
-        };
+          return binding(ctx.props, ctx.slots, ctx.attrs)
+        }
       } else {
         assert(
           false,
-          '"setup" must return a "Object" or "Function", get "' +
-            toString(binding) +
-            '"'
-        );
+          `"setup" must return a "Object" or "Function", get "${toString(binding)}"`
+        )
       }
-      return;
+      return
     }
 
-    Object.keys(binding).forEach(name => checkData(vm, name));
+    Object.keys(binding).forEach(name => checkData(vm, name))
 
-    vm._data2 = observable(unProxy(binding));
+    vm._data2 = observable(unProxy(binding))
 
-    Object.keys(binding).forEach(key => proxy2(vm, vm._data2, key));
+    Object.keys(binding).forEach(key => proxy(vm, vm._data2, key))
   }
 
   function createContext(vm) {
-    var ctx = { vm };
-    var props = ["props", "parent", "root", "refs", "slots", "attrs"];
-    var methodWithoutReturn = ["emit"];
+    var ctx = { vm }
+    var props = [`props`, `parent`, `root`, `refs`, `slots`, `attrs`]
+    var methodWithoutReturn = [`emit`]
 
     props.forEach(function(key) {
-      proxy(
-        ctx,
-        key,
-        function() {
-          return vm["$" + key];
+      Object.defineProperty(ctx, key, {
+        enumerable: true,
+        configurable: true,
+        get: function() {
+          return vm[`$${key}`]
         },
-        function() {
+        set: function() {
           vueWarn(
-            "Cannot assign to '" + key + "' because it is a read-only property",
+            `Cannot assign to "${key}" because it is a read-only property`,
             vm
-          );
-        }
-      );
-    });
+          )
+        },
+      })
+    })
 
     methodWithoutReturn.forEach(function(key) {
-      return proxy(ctx, key, function() {
-        var vmKey = "$" + key;
-        return function() {
-          var args = [];
-          for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i] = arguments[_i];
+      Object.defineProperty(ctx, key, {
+        enumerable: true,
+        configurable: true,
+        get: function() {
+          return function() {
+            var args = []
+            for (var _i = 0; _i < arguments.length; _i++) {
+              args[_i] = arguments[_i]
+            }
+            vm[`$${key}`].apply(vm, args)
           }
-          var fn = vm[vmKey];
-          fn.apply(vm, args);
-        };
-      });
-    });
-    return ctx;
+        },
+        set: noopFn,
+      })
+    })
+
+    return ctx
   }
 }
 
 export const plugin = {
   install: function install(Vue) {
-    return _install(Vue, mixin);
-  }
-};
+    return _install(Vue, mixin)
+  },
+}
 
-if (!currentVue && typeof window !== "undefined" && window.Vue) {
-  plugin.install(window.Vue);
+if (!currentVue && typeof window !== `undefined` && window.Vue) {
+  plugin.install(window.Vue)
 }

@@ -1,6 +1,6 @@
 {
   "name": "@aimwhy/vue-function-api",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Vue2 plugin for the function-based RFC",
   "main": "dist/index.js",
   "scripts": {
