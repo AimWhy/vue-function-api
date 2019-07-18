@@ -2,7 +2,7 @@
 
 > [通过基于函数的 API 来复用组件逻辑](https://zhuanlan.zhihu.com/p/68477600)
 
-面向未来编程(Future-Oriented Programming)，`vue-function-api` 提供 Vue3 中的组件逻辑复用机制帮助开发者开发下一代 vue 应用程序，允许开发者利用 Vue3 的响应性 API 建设未来 Vue 生态。
+面向未来编程(Future-Oriented Programming)，`@aimwhy/vue-function-api` 提供 Vue3 中的组件逻辑复用机制帮助开发者开发下一代 vue 应用程序，允许开发者利用 Vue3 的响应性 API 建设未来 Vue 生态。
 
 [**English Version**](./README.md)
 
@@ -10,7 +10,7 @@
 
 # 导航
 
-- [Changelog](https://github.com/vuejs/vue-function-api/blob/master/CHANGELOG.md)
+- [Changelog](https://github.com/aimwhy/vue-function-api/blob/master/CHANGELOG.md)
 - [安装](#安装)
 - [使用](#使用)
 - [示例](#示例)
@@ -47,11 +47,11 @@ yarn add @aimwhy/vue-function-api
 
 
 # 使用
-您必须显式地通过 `Vue.use()` 来安装 `vue-function-api`:
+您必须显式地通过 `Vue.use()` 来安装 `@aimwhy/vue-function-api`:
 
 ```js
 import Vue from 'vue'
-import { plugin } from 'vue-function-api'
+import { plugin } from '@aimwhy/vue-function-api'
 
 Vue.use(plugin)
 ```
@@ -72,7 +72,7 @@ Vue.use(plugin)
 
 <script>
   import Vue from 'vue';
-  import { value, computed, watch, onMounted } from 'vue-function-api'
+  import { value, computed, watch, onMounted } from '@aimwhy/vue-function-api'
 
   export default {
     setup() {
@@ -142,7 +142,7 @@ const MyComponent = {
 Example:
 
 ```js
-import { value } from 'vue-function-api'
+import { value } from '@aimwhy/vue-function-api'
 
 const MyComponent = {
   setup(props) {
@@ -167,7 +167,7 @@ const MyComponent = {
 Example:
 
 ```js
-import { state } from 'vue-function-api'
+import { state } from '@aimwhy/vue-function-api'
 
 const object = state({
   count: 0
@@ -184,7 +184,7 @@ object.count++
 Example:
 
 ```js
-import { value, computed } from 'vue-function-api'
+import { value, computed } from '@aimwhy/vue-function-api'
 
 const count = value(0)
 const countPlusOne = computed(() => count.value + 1)
@@ -258,7 +258,7 @@ watch(
 Example:
 
 ```js
-import { onMounted, onUpdated, onUnmounted } from 'vue-function-api'
+import { onMounted, onUpdated, onUnmounted } from '@aimwhy/vue-function-api'
 
 const MyComponent = {
   setup() {
@@ -285,7 +285,7 @@ const MyComponent = {
 Example:
 
 ```js
-import { provide, inject } from 'vue-function-api'
+import { provide, inject } from '@aimwhy/vue-function-api'
 
 const CountSymbol = Symbol()
 
@@ -397,6 +397,6 @@ console.log(count.value) // 2
 
 # 其他
 
-- `vue-function-api` 会一直保持与 `Vue3.x` 的兼容性，当 `3.0` 发布时，您可以无缝替换掉本库。
-- `vue-function-api` 的实现只依赖 `Vue2.x` 本身，不论 `Vue3.x` 的发布与否，都不会影响您正常使用本库。
-- 由于 `Vue2.x` 的公共 API 限制，`vue-function-api` 无法避免的会产生一些额外的内存负载。如果您的应用并不工作在极端内存环境下，无需关心此项。
+- `@aimwhy/vue-function-api` 会一直保持与 `Vue3.x` 的兼容性，当 `3.0` 发布时，您可以无缝替换掉本库。
+- `@aimwhy/vue-function-api` 的实现只依赖 `Vue2.x` 本身，不论 `Vue3.x` 的发布与否，都不会影响您正常使用本库。
+- 由于 `Vue2.x` 的公共 API 限制，`@aimwhy/vue-function-api` 无法避免的会产生一些额外的内存负载。如果您的应用并不工作在极端内存环境下，无需关心此项。

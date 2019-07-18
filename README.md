@@ -2,7 +2,7 @@
 
 > [Function-based Component API RFC](https://github.com/vuejs/rfcs/blob/function-apis/active-rfcs/0000-function-api.md)
 
-Future-Oriented Programming, `vue-function-api` provides function api from `Vue3.x` to `Vue2.x` for developing next-generation Vue applications.
+Future-Oriented Programming, `@aimwhy/vue-function-api` provides function api from `Vue3.x` to `Vue2.x` for developing next-generation Vue applications.
 
 [**中文文档**](./README.zh-CN.md)
 
@@ -48,11 +48,11 @@ By using the global variable `window.vueFunctionApi`
 
 # Usage
 
-You must explicitly install `vue-function-api` via `Vue.use()`:
+You must explicitly install `@aimwhy/vue-function-api` via `Vue.use()`:
 
 ```js
 import Vue from 'vue'
-import { plugin } from 'vue-function-api'
+import { plugin } from '@aimwhy/vue-function-api'
 
 Vue.use(plugin)
 ```
@@ -73,7 +73,7 @@ After installing the plugin you can use the new [function API](#API) to compose 
 
 <script>
   import Vue from 'vue';
-  import { value, computed, watch, onMounted } from 'vue-function-api'
+  import { value, computed, watch, onMounted } from '@aimwhy/vue-function-api'
 
   export default {
     setup() {
@@ -143,7 +143,7 @@ Calling `value()` returns a **value wrapper** object that contains a single reac
 Example:
 
 ```js
-import { value } from 'vue-function-api'
+import { value } from '@aimwhy/vue-function-api'
 
 const MyComponent = {
   setup(props) {
@@ -168,7 +168,7 @@ Equivalent with [`Vue.observable`](https://vuejs.org/v2/api/index.html#Vue-obser
 Example:
 
 ```js
-import { state } from 'vue-function-api'
+import { state } from '@aimwhy/vue-function-api'
 
 const object = state({
   count: 0
@@ -185,7 +185,7 @@ Equivalent with computed property from `vue 2.x`.
 Example:
 
 ```js
-import { value, computed } from 'vue-function-api'
+import { value, computed } from '@aimwhy/vue-function-api'
 
 const count = value(0)
 const countPlusOne = computed(() => count.value + 1)
@@ -258,7 +258,7 @@ All current lifecycle hooks will have an equivalent `onXXX` function that can be
 Example:
 
 ```js
-import { onMounted, onUpdated, onUnmounted } from 'vue-function-api'
+import { onMounted, onUpdated, onUnmounted } from '@aimwhy/vue-function-api'
 
 const MyComponent = {
   setup() {
@@ -285,7 +285,7 @@ Equivalent with `provide` and `inject` from `2.x`
 Example:
 
 ```js
-import { provide, inject } from 'vue-function-api'
+import { provide, inject } from '@aimwhy/vue-function-api'
 
 const CountSymbol = Symbol()
 
@@ -336,9 +336,9 @@ Full properties list:
 
 # Misc
 
-- `vue-function-api` will keep updated with `Vue3.x` API. When `3.0` released, you can replace this library seamlessly.
-- `vue-function-api` only relies on `Vue2.x` itself. Wheather `Vue3.x` is released or not, it's not affect you using this library.
-- Due the the limitation of `Vue2.x`'s public API. `vue-function-api` inevitably introduce some extract workload. It doesn't concern you if you are now working on extreme environment.
+- `@aimwhy/vue-function-api` will keep updated with `Vue3.x` API. When `3.0` released, you can replace this library seamlessly.
+- `@aimwhy/vue-function-api` only relies on `Vue2.x` itself. Wheather `Vue3.x` is released or not, it's not affect you using this library.
+- Due the the limitation of `Vue2.x`'s public API. `@aimwhy/vue-function-api` inevitably introduce some extract workload. It doesn't concern you if you are now working on extreme environment.
 
 
 [wrapper]: https://github.com/vuejs/rfcs/blob/function-apis/active-rfcs/0000-function-api.md#why-do-we-need-value-wrappers
