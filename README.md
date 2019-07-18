@@ -30,18 +30,18 @@ Future-Oriented Programming, `vue-function-api` provides function api from `Vue3
 
 **npm**
 ```bash
-npm install vue-function-api --save
+npm install @aimwhy/vue-function-api --save
 ```
 
 **yarn**
 ```bash
-yarn add vue-function-api
+yarn add @aimwhy/vue-function-api
 ```
 
 **CDN**
 
 ```html
-<script src="https://unpkg.com/@aimwhy/vue-function-api@0.0.1/dist/index.js"></script>
+<script src="https://unpkg.com/@aimwhy/vue-function-api@0.0.6/dist/index.js"></script>
 ```
 By using the global variable `window.vueFunctionApi`
 
